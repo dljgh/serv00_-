@@ -1,0 +1,34 @@
+name: SSH Command Execution
+
+on:
+  workflow_dispatch:
+    # 手动触发
+    inputs:
+      server:
+        description: "Server address"
+        required: true
+        default: "s8.serv00.com"
+      username:
+        description: "SSH username"
+        required: true
+        default: "dljzh0"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install SSH Client
+      run: sudo apt-get install -y sshpass
+
+    - name: Execute SSH commands on VPS
+      env:
+        SSH_PASS: ${{ secrets.SSH_PASSWORD }}
+      run: |
+        sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no ${{ github.event.inputs.username }}@${{ github.event.inputs.server }} << EOF
+          nohup /home/${USER}/.nezha-dashboard/start.sh >/dev/null 2>&1 &
+          nohup /home/${USER}/.nezha-agent/start.sh >/dev/null 2>&1 &
+        EOF
